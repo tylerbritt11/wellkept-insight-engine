@@ -164,6 +164,49 @@
       flex-shrink: 0;
     }
 
+    /* --- Context Grid --- */
+    .context-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    .context-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.04);
+    }
+    .context-card h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--sage);
+    }
+    .context-card p {
+      font-size: 0.88rem;
+      color: var(--text-light);
+      line-height: 1.65;
+    }
+    .context-card p em {
+      font-style: italic;
+    }
+    .context-card p strong {
+      color: var(--text);
+    }
+    .context-card.accent {
+      background: var(--sage);
+      color: var(--white);
+    }
+    .context-card.accent h4 {
+      color: var(--sage-light);
+    }
+    .context-card.accent p {
+      color: rgba(255,255,255,0.85);
+    }
+    .context-card.accent p strong {
+      color: var(--white);
+    }
+
     /* --- Principles Grid --- */
     .principles-grid {
       display: grid;
@@ -519,10 +562,31 @@
   <div class="hero">
     <div class="hero-badge">WellKept Feature Design</div>
     <h1>Insight Engine</h1>
-    <p>A home that thinks about itself, even when the homeowner isn't. Proactive, personalized insights surfaced on the Today screen &mdash; from data gaps to seasonal checklists.</p>
+    <p>A home that thinks about itself, even when the homeowner isn't.</p>
   </div>
 
   <div class="container">
+
+    <!-- Context -->
+    <section>
+      <div class="section-label">The Problem</div>
+      <div class="section-title">Why This Exists</div>
+
+      <div class="context-grid">
+        <div class="context-card">
+          <h4>The gap today</h4>
+          <p>WellKept already has a rich data model (23+ tables) and AI tools for recommendations, cost analysis, and risk detection &mdash; but they're only accessible through chat. Nothing is proactively surfaced. The Today screen's top slot shows a hardcoded "Your home is humming along..." message, regardless of what the app actually knows.</p>
+        </div>
+        <div class="context-card">
+          <h4>The opportunity</h4>
+          <p>Homeowners don't think about maintenance until something breaks. The Insight Engine connects what we <em>know</em> about a user's home to what we <em>show</em> them &mdash; turning passive data into a proactive advisor. A single rotating card on the Today screen surfaces the most important thing right now: a safety risk, a data gap worth filling, a seasonal heads-up, or a quiet "all clear."</p>
+        </div>
+        <div class="context-card accent">
+          <h4>The goal</h4>
+          <p>Make the app feel like it's <strong>thinking about the home on the homeowner's behalf</strong>. Every time they open WellKept, there's either something genuinely useful to see &mdash; or an earned silence that means the engine looked and found nothing to flag. This is the feature that turns WellKept from a record-keeping tool into a home intelligence system.</p>
+        </div>
+      </div>
+    </section>
 
     <!-- Design Principles -->
     <section>
