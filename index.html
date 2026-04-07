@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WellKept — Insight Engine Design</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    :root {
+      --sage: #384B3B;
+      --sage-light: #d2e8d3;
+      --sage-mid: #5a7a5c;
+      --sand: #fcf9f1;
+      --sand-dark: #ebe8e0;
+      --text: #1c1c17;
+      --text-light: #6b6b60;
+      --accent-gold: #D4AF37;
+      --accent-blue: #4a90d9;
+      --accent-red: #ba1a1a;
+      --white: #ffffff;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --radius-lg: 24px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--sand);
+      color: var(--text);
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* --- Hero --- */
+    .hero {
+      background: linear-gradient(135deg, var(--sage) 0%, #2d3d2e 100%);
+      color: var(--white);
+      padding: 4rem 2rem 3.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -60%;
+      left: -20%;
+      width: 140%;
+      height: 200%;
+      background: radial-gradient(ellipse at center, rgba(210,232,211,0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 999px;
+      padding: 0.3rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -1.2px;
+      margin-bottom: 0.75rem;
+    }
+    .hero p {
+      font-size: 1.15rem;
+      opacity: 0.85;
+      max-width: 640px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* --- Container --- */
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* --- Section --- */
+    section {
+      padding: 3.5rem 0;
+    }
+    section + section {
+      border-top: 1px solid var(--sand-dark);
+    }
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--sage-mid);
+      margin-bottom: 0.5rem;
+    }
+    .section-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 0.5rem;
+    }
+    .section-desc {
+      color: var(--text-light);
+      font-size: 0.95rem;
+      max-width: 600px;
+      margin-bottom: 2rem;
+    }
+
+    /* --- Architecture Diagram --- */
+    .arch-flow {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      overflow-x: auto;
+      padding: 1rem 0;
+    }
+    .arch-node {
+      flex: 1;
+      min-width: 160px;
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.04);
+      position: relative;
+      text-align: center;
+    }
+    .arch-node .node-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--sage);
+      color: var(--white);
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0.75rem;
+    }
+    .arch-node h4 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+    .arch-node p {
+      font-size: 0.78rem;
+      color: var(--text-light);
+      line-height: 1.5;
+    }
+    .arch-arrow {
+      display: flex;
+      align-items: center;
+      padding: 0 0.35rem;
+      color: var(--sage-mid);
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    /* --- Principles Grid --- */
+    .principles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    .principle-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.04);
+      border-left: 3px solid var(--sage);
+    }
+    .principle-card .num {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--sage-mid);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+    .principle-card h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+    .principle-card p {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      line-height: 1.55;
+    }
+
+    /* --- Priority Table --- */
+    .priority-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: var(--white);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.04);
+      font-size: 0.85rem;
+    }
+    .priority-table thead {
+      background: var(--sage);
+      color: var(--white);
+    }
+    .priority-table th {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .priority-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--sand-dark);
+      vertical-align: top;
+    }
+    .priority-table tr:last-child td {
+      border-bottom: none;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .badge-red { background: #fde8e8; color: var(--accent-red); }
+    .badge-blue { background: #e8f0fd; color: var(--accent-blue); }
+    .badge-sage { background: var(--sage-light); color: var(--sage); }
+    .badge-gold { background: #fdf5e0; color: #8a6d1b; }
+    .badge-muted { background: var(--sand-dark); color: var(--text-light); }
+
+    /* --- Completeness Model --- */
+    .completeness-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 700px) {
+      .completeness-wrap { grid-template-columns: 1fr; }
+    }
+    .system-list {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.04);
+    }
+    .system-list h4 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--sage-mid);
+      margin-bottom: 0.75rem;
+    }
+    .system-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.4rem 0;
+      font-size: 0.85rem;
+    }
+    .system-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--sage);
+      flex-shrink: 0;
+    }
+    .system-dot.dynamic {
+      background: var(--accent-gold);
+    }
+
+    /* --- Scoring Dimensions --- */
+    .scoring-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+    .score-dim {
+      background: var(--white);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.04);
+      text-align: center;
+    }
+    .score-dim .weight {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--sage);
+      margin-bottom: 0.15rem;
+    }
+    .score-dim .label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-light);
+    }
+    .score-dim .detail {
+      font-size: 0.72rem;
+      color: var(--text-light);
+      opacity: 0.7;
+      margin-top: 0.25rem;
+      line-height: 1.4;
+    }
+
+    /* --- Decision Cards --- */
+    .decisions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1rem;
+    }
+    .decision-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.04);
+    }
+    .decision-card .q {
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--sage);
+    }
+    .decision-card .a {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      line-height: 1.6;
+    }
+    .decision-card .a strong {
+      color: var(--text);
+    }
+
+    /* --- Interaction Flow --- */
+    .flow-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .flow-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.04);
+    }
+    .flow-card .flow-type {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .flow-card h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .flow-steps {
+      list-style: none;
+      padding: 0;
+    }
+    .flow-steps li {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      padding: 0.25rem 0;
+      padding-left: 1rem;
+      position: relative;
+    }
+    .flow-steps li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.65rem;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--sage-light);
+    }
+
+    /* --- Quality Gate --- */
+    .gate-steps {
+      display: flex;
+      gap: 0;
+      flex-wrap: wrap;
+    }
+    .gate-step {
+      flex: 1;
+      min-width: 200px;
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.04);
+      position: relative;
+      text-align: center;
+    }
+    .gate-step .step-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0.75rem;
+      font-size: 1.2rem;
+    }
+    .gate-step h4 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+    .gate-step p {
+      font-size: 0.78rem;
+      color: var(--text-light);
+      line-height: 1.5;
+    }
+    .gate-arrow {
+      display: flex;
+      align-items: center;
+      padding: 0 0.5rem;
+      color: var(--sage-mid);
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    /* --- FTX Section --- */
+    .ftx-timeline {
+      position: relative;
+      padding-left: 2rem;
+    }
+    .ftx-timeline::before {
+      content: '';
+      position: absolute;
+      left: 0.5rem;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--sage), var(--sage-light));
+    }
+    .ftx-step {
+      position: relative;
+      margin-bottom: 1.5rem;
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.04);
+    }
+    .ftx-step::before {
+      content: '';
+      position: absolute;
+      left: -1.65rem;
+      top: 1.35rem;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--sage);
+      border: 2px solid var(--sand);
+    }
+    .ftx-step h4 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+    .ftx-step p {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      line-height: 1.55;
+    }
+    .ftx-step .example {
+      margin-top: 0.5rem;
+      padding: 0.75rem;
+      background: var(--sand);
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-style: italic;
+      color: var(--text-light);
+      border-left: 3px solid var(--sage-light);
+    }
+
+    /* --- Footer --- */
+    .footer {
+      text-align: center;
+      padding: 2.5rem 1.5rem;
+      color: var(--text-light);
+      font-size: 0.8rem;
+      border-top: 1px solid var(--sand-dark);
+    }
+    .footer a {
+      color: var(--sage);
+      text-decoration: none;
+    }
+
+    /* --- Responsive --- */
+    @media (max-width: 768px) {
+      .hero { padding: 3rem 1.5rem 2.5rem; }
+      .arch-flow { flex-direction: column; gap: 0.5rem; }
+      .arch-arrow { transform: rotate(90deg); justify-content: center; padding: 0.25rem 0; }
+      .gate-steps { flex-direction: column; gap: 0.5rem; }
+      .gate-arrow { transform: rotate(90deg); justify-content: center; padding: 0.25rem 0; }
+      section { padding: 2.5rem 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">WellKept Feature Design</div>
+    <h1>Insight Engine</h1>
+    <p>A home that thinks about itself, even when the homeowner isn't. Proactive, personalized insights surfaced on the Today screen &mdash; from data gaps to seasonal checklists.</p>
+  </div>
+
+  <div class="container">
+
+    <!-- Design Principles -->
+    <section>
+      <div class="section-label">Philosophy</div>
+      <div class="section-title">Design Principles</div>
+      <div class="section-desc">Six guiding principles that shape every decision in the insight engine.</div>
+
+      <div class="principles-grid">
+        <div class="principle-card">
+          <div class="num">Principle 01</div>
+          <h4>Freshness Over Volume</h4>
+          <p>One insight at a time, but always something new when the user returns. Weekly cadence, not daily or per-visit.</p>
+        </div>
+        <div class="principle-card">
+          <div class="num">Principle 02</div>
+          <h4>Earn the Right to Advise</h4>
+          <p>Early on, focus on collecting data (completeness coach). As the profile fills in, transition to proactive advisor.</p>
+        </div>
+        <div class="principle-card">
+          <div class="num">Principle 03</div>
+          <h4>Never Feel Like Homework</h4>
+          <p>The app should feel alive and helpful, not like a checklist nagging you. Respect the user's time and knowledge level.</p>
+        </div>
+        <div class="principle-card">
+          <div class="num">Principle 04</div>
+          <h4>No Filler</h4>
+          <p>If we genuinely have nothing new, show a positive "all clear" state. Bad content erodes trust faster than silence.</p>
+        </div>
+        <div class="principle-card">
+          <div class="num">Principle 05</div>
+          <h4>Accept Fuzzy Data</h4>
+          <p>"About 6 years old" is plenty. Don't require serial numbers to deliver value.</p>
+        </div>
+        <div class="principle-card">
+          <div class="num">Principle 06</div>
+          <h4>Immediate Payoff</h4>
+          <p>When a user invests time answering questions, the next insight must demonstrate value from what they just shared. Data in &rarr; value out, every time.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Architecture -->
+    <section>
+      <div class="section-label">System Design</div>
+      <div class="section-title">Architecture</div>
+      <div class="section-desc">Five components in a dedicated <code>server/insights/</code> module, orchestrated by a scheduler.</div>
+
+      <div class="arch-flow">
+        <div class="arch-node">
+          <div class="node-num">1</div>
+          <h4>Evaluator</h4>
+          <p>Pure logic, no LLM. Ranks what <em>type</em> of insight to generate next using priority hierarchy + filters.</p>
+        </div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-node">
+          <div class="node-num">2</div>
+          <h4>Generator</h4>
+          <p>Template-based for simple content, LLM-powered for rich narratives. Two modes, one output format.</p>
+        </div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-node">
+          <div class="node-num">3</div>
+          <h4>Quality Gate</h4>
+          <p>Three-layer validation: structural, relevance (cross-ref real data), and dedup (30-day similarity).</p>
+        </div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-node">
+          <div class="node-num">4</div>
+          <h4>Queue</h4>
+          <p><code>insight_queue</code> table. One row per insight. Tracks status, engagement, expiry, and snooze state.</p>
+        </div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-node">
+          <div class="node-num">5</div>
+          <h4>API</h4>
+          <p>GET /next, POST /dismiss, POST /engage, GET /completeness. Client always sees one card.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Priority Hierarchy -->
+    <section>
+      <div class="section-label">Ranking</div>
+      <div class="section-title">Priority Hierarchy</div>
+      <div class="section-desc">The evaluator ranks insight types in strict priority order. Filters (dismissal, engagement, staleness) apply before ranking.</div>
+
+      <table class="priority-table">
+        <thead>
+          <tr>
+            <th>Priority</th>
+            <th>Type</th>
+            <th>Badge</th>
+            <th>Example</th>
+            <th>Dismiss</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>P1</strong></td>
+            <td>Urgent / Time-sensitive</td>
+            <td><span class="badge badge-red">HEADS UP</span></td>
+            <td>Smoke detector batteries 2+ years old</td>
+            <td>Snooze 7d</td>
+          </tr>
+          <tr>
+            <td><strong>P2</strong></td>
+            <td>Data Gap</td>
+            <td><span class="badge badge-blue">QUICK Q</span></td>
+            <td>"Tell us about your electrical system"</td>
+            <td>Not now</td>
+          </tr>
+          <tr>
+            <td><strong>P3</strong></td>
+            <td>Proactive Observation</td>
+            <td><span class="badge badge-sage">INSIGHT</span></td>
+            <td>"Your HVAC is entering its second decade"</td>
+            <td>Got it</td>
+          </tr>
+          <tr>
+            <td><strong>P4</strong></td>
+            <td>Re-angled Data</td>
+            <td><span class="badge badge-sage">INSIGHT</span></td>
+            <td>Same topic, new context (seasonal, age threshold)</td>
+            <td>Got it</td>
+          </tr>
+          <tr>
+            <td><strong>P5</strong></td>
+            <td>Seasonal Tip</td>
+            <td><span class="badge badge-gold">SEASONAL</span></td>
+            <td>"Summer's coming &mdash; prep your irrigation"</td>
+            <td>Dismiss</td>
+          </tr>
+          <tr>
+            <td><strong>P6</strong></td>
+            <td>All Clear</td>
+            <td><span class="badge badge-muted">&mdash;</span></td>
+            <td>Positive reinforcement. Earned silence.</td>
+            <td>N/A</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Quality Gate -->
+    <section>
+      <div class="section-label">Validation</div>
+      <div class="section-title">Quality Gate</div>
+      <div class="section-desc">Every insight passes through three validation layers before it reaches the queue. Failed insights are dropped silently.</div>
+
+      <div class="gate-steps">
+        <div class="gate-step">
+          <div class="step-icon" style="background: var(--sage-light);">&#9745;</div>
+          <h4>Structural</h4>
+          <p>Required fields present. Body 20&ndash;280 chars. Valid badge value.</p>
+        </div>
+        <div class="gate-arrow">&rarr;</div>
+        <div class="gate-step">
+          <div class="step-icon" style="background: #e8f0fd;">&#128269;</div>
+          <h4>Relevance</h4>
+          <p>Cross-reference referenced equipment, services, warranties against actual home data. Reject fabrications.</p>
+        </div>
+        <div class="gate-arrow">&rarr;</div>
+        <div class="gate-step">
+          <div class="step-icon" style="background: #fdf5e0;">&#128200;</div>
+          <h4>Dedup</h4>
+          <p>String similarity against insights shown in last 30 days. Reject &gt;80% similar unless explicitly re-angled with new source data.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Completeness Model -->
+    <section>
+      <div class="section-label">Data Model</div>
+      <div class="section-title">Home Systems Completeness</div>
+      <div class="section-desc">Every home is scored across 12 core systems + dynamic extras detected from property data.</div>
+
+      <div class="completeness-wrap">
+        <div class="system-list">
+          <h4>12 Core Systems</h4>
+          <div class="system-item"><div class="system-dot"></div> HVAC / Climate</div>
+          <div class="system-item"><div class="system-dot"></div> Plumbing</div>
+          <div class="system-item"><div class="system-dot"></div> Electrical</div>
+          <div class="system-item"><div class="system-dot"></div> Roof & Exterior</div>
+          <div class="system-item"><div class="system-dot"></div> Foundation & Structure</div>
+          <div class="system-item"><div class="system-dot"></div> Appliances</div>
+          <div class="system-item"><div class="system-dot"></div> Water Heater</div>
+          <div class="system-item"><div class="system-dot"></div> Windows & Doors</div>
+          <div class="system-item"><div class="system-dot"></div> Safety Systems</div>
+          <div class="system-item"><div class="system-dot"></div> Landscaping</div>
+          <div class="system-item"><div class="system-dot"></div> Sewer / Drainage</div>
+          <div class="system-item"><div class="system-dot"></div> Garage Door & Opener</div>
+        </div>
+        <div class="system-list">
+          <h4>Dynamic Extras (per property)</h4>
+          <div class="system-item"><div class="system-dot dynamic"></div> Pool / Spa</div>
+          <div class="system-item"><div class="system-dot dynamic"></div> Septic System</div>
+          <div class="system-item"><div class="system-dot dynamic"></div> Well Water</div>
+          <div class="system-item"><div class="system-dot dynamic"></div> Solar Panels</div>
+          <div class="system-item"><div class="system-dot dynamic"></div> Fireplace / Chimney</div>
+          <div class="system-item"><div class="system-dot dynamic"></div> Generator / Backup Power</div>
+          <div class="system-item"><div class="system-dot dynamic"></div> Water Softener / Filtration</div>
+          <div class="system-item"><div class="system-dot dynamic"></div> Home Security / Alarm</div>
+          <div class="system-item"><div class="system-dot dynamic"></div> Radon Mitigation</div>
+          <div class="system-item"><div class="system-dot dynamic"></div> Basement / Crawl Space</div>
+          <div class="system-item"><div class="system-dot dynamic"></div> Pest Control</div>
+          <div class="system-item"><div class="system-dot dynamic"></div> Elevator / Lift</div>
+        </div>
+      </div>
+
+      <div class="scoring-grid">
+        <div class="score-dim">
+          <div class="weight">30%</div>
+          <div class="label">Acknowledged + Age</div>
+          <div class="detail">Equipment registered or system mentioned. "About 6 years" is fine.</div>
+        </div>
+        <div class="score-dim">
+          <div class="weight">25%</div>
+          <div class="label">Service History</div>
+          <div class="detail">At least one service record, however sparse.</div>
+        </div>
+        <div class="score-dim">
+          <div class="weight">15%</div>
+          <div class="label">Vendor Linked</div>
+          <div class="detail">A vendor associated with the system's records.</div>
+        </div>
+        <div class="score-dim">
+          <div class="weight">15%</div>
+          <div class="label">Warranty / Docs</div>
+          <div class="detail">Warranty known or relevant document attached. Bonus tier.</div>
+        </div>
+        <div class="score-dim">
+          <div class="weight">15%</div>
+          <div class="label">Recurring Maint.</div>
+          <div class="detail">A recurring service schedule for this system. Bonus tier.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- First Time Experience -->
+    <section>
+      <div class="section-label">Onboarding</div>
+      <div class="section-title">First-Time Experience & Payoff Loop</div>
+      <div class="section-desc">The first insight is critical. The system earns trust through an immediate data-in &rarr; value-out feedback loop.</div>
+
+      <div class="ftx-timeline">
+        <div class="ftx-step">
+          <h4>1. Initial Insight (with Rentcast data)</h4>
+          <p>Acknowledge what we already know, then ask about the most impactful gap.</p>
+          <div class="example">"We know your home was built in 1998 with central air. Tell us a bit about your major systems &mdash; age, last service, anything you know."</div>
+        </div>
+        <div class="ftx-step">
+          <h4>2. Initial Insight (no enrichment)</h4>
+          <p>Warm onboarding prompt. Low-pressure, signals a small time investment.</p>
+          <div class="example">"Let's get to know your home. A few quick questions about your biggest systems will help us keep everything on track."</div>
+        </div>
+        <div class="ftx-step">
+          <h4>3. Payoff &mdash; Immediate Value</h4>
+          <p>After the first data gap is completed, the dirty flag triggers re-evaluation. The very next insight references what the user just told us.</p>
+          <div class="example">"Now that we know your HVAC is 9 years old, here's what that means: you've got about 5-6 years left on a typical lifespan. No action needed yet, but worth budgeting ahead."</div>
+        </div>
+        <div class="ftx-step">
+          <h4>4. Loop Reinforcement</h4>
+          <p>This payoff loop is mandatory for the first 3&ndash;4 interactions. The evaluator prioritizes "first proactive insight about recently-provided data" above normal ranking until the user has experienced the full cycle at least twice.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Key Decisions -->
+    <section>
+      <div class="section-label">Design Decisions</div>
+      <div class="section-title">Key Decisions & Tradeoffs</div>
+      <div class="section-desc">The reasoning behind the most consequential architectural and UX choices.</div>
+
+      <div class="decisions-grid">
+        <div class="decision-card">
+          <div class="q">Why one card at a time?</div>
+          <div class="a"><strong>Signal-to-noise.</strong> Multiple cards create paralysis. One card says "this is the most important thing right now." The user builds a habit: open app, see card, take action or dismiss, done. Each card earns screen time by being the best candidate.</div>
+        </div>
+        <div class="decision-card">
+          <div class="q">Why weekly batch, not real-time?</div>
+          <div class="a"><strong>LLM cost control + predictability.</strong> Batch generation means we call the LLM once per home per week, generating 5-7 insights as buffer. Event-triggered regeneration uses a dirty flag, debounced to 1 hour. Only truly urgent items bypass the batch.</div>
+        </div>
+        <div class="decision-card">
+          <div class="q">Why no LLM in the evaluator?</div>
+          <div class="a"><strong>Determinism + speed.</strong> The evaluator runs pure logic over the database. Priority ranking must be predictable and auditable. The LLM only enters at content generation &mdash; deciding <em>what</em> to say is deterministic, <em>how</em> to say it is creative.</div>
+        </div>
+        <div class="decision-card">
+          <div class="q">Why accept fuzzy data (30% weight on "acknowledged + rough age")?</div>
+          <div class="a"><strong>Activation energy.</strong> If completing a system requires precise data (serial number, install date, model), users won't do it. "I have central AC, about 6 years old" reaches ~55% score on that system. 50-60% should feel like meaningful progress, not failure.</div>
+        </div>
+        <div class="decision-card">
+          <div class="q">Why a three-layer quality gate?</div>
+          <div class="a"><strong>Trust.</strong> An insight that mentions equipment you don't have, repeats last week's card, or shows a 500-character wall of text erodes trust instantly. The structural, relevance, and dedup checks catch LLM hallucinations and repetition before they reach the user.</div>
+        </div>
+        <div class="decision-card">
+          <div class="q">Why "earned silence" for all-clear?</div>
+          <div class="a"><strong>No filler principle.</strong> Showing a generic tip because the queue is empty teaches the user to ignore the card slot. A warm "all clear" state is positive reinforcement &mdash; it means the insight engine looked and found nothing to flag. That's valuable information.</div>
+        </div>
+        <div class="decision-card">
+          <div class="q">Why template + LLM generator (not all-LLM)?</div>
+          <div class="a"><strong>Cost + reliability.</strong> Warranty expiry warnings and completeness prompts don't need an LLM. Templates handle ~40% of insight types at zero LLM cost. LLM mode is reserved for spending narratives, lifespan context, and seasonal advice &mdash; content that benefits from natural language fluency.</div>
+        </div>
+        <div class="decision-card">
+          <div class="q">Why tight "urgent" threshold?</div>
+          <div class="a"><strong>Boy-who-cried-wolf risk.</strong> Only safety risks, imminent warranty expiry (&lt;30d on &gt;$1K equipment), and critical system maintenance overdue by 2x qualify as urgent. Everything else that feels "important" is P3 (proactive). If urgent is overused, users stop paying attention.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interaction Flows -->
+    <section>
+      <div class="section-label">UX Flows</div>
+      <div class="section-title">Interaction Patterns</div>
+      <div class="section-desc">Four primary flows from insight card to action completion.</div>
+
+      <div class="flow-cards">
+        <div class="flow-card">
+          <div class="flow-type" style="color: var(--accent-blue);">Data Gap &rarr; AI Chat</div>
+          <h4>"Tell us about your electrical system"</h4>
+          <ol class="flow-steps">
+            <li>User sees QUICK Q card on Today</li>
+            <li>Taps "Let's do it"</li>
+            <li>AI chat opens, pre-seeded with system context</li>
+            <li>AI asks 2-3 focused questions, logs equipment</li>
+            <li>Completeness updates; next insight references new data</li>
+          </ol>
+        </div>
+        <div class="flow-card">
+          <div class="flow-type" style="color: var(--accent-gold);">Seasonal &rarr; Checklist</div>
+          <h4>"Summer's coming &mdash; prep your home"</h4>
+          <ol class="flow-steps">
+            <li>User sees SEASONAL card</li>
+            <li>Taps "Create my summer checklist"</li>
+            <li>System generates todos from climate zone + systems</li>
+            <li>Dedup against existing recurring services &amp; todos</li>
+            <li>Todos created with staggered due dates</li>
+          </ol>
+        </div>
+        <div class="flow-card">
+          <div class="flow-type" style="color: var(--sage);">Proactive &rarr; Advisory</div>
+          <h4>"Your HVAC is entering its second decade"</h4>
+          <ol class="flow-steps">
+            <li>User sees INSIGHT card</li>
+            <li>Taps "Tell me more"</li>
+            <li>AI chat opens with lifespan context</li>
+            <li>Agent advises on watch-for signs, budgeting, quotes</li>
+            <li>May offer to create a task or log details</li>
+          </ol>
+        </div>
+        <div class="flow-card">
+          <div class="flow-type" style="color: var(--accent-red);">Urgent &rarr; Task</div>
+          <h4>"Smoke detector batteries are 2+ years old"</h4>
+          <ol class="flow-steps">
+            <li>User sees HEADS UP card</li>
+            <li>Taps "Add to my tasks"</li>
+            <li>Todo created immediately</li>
+            <li>Or "Remind me later" snoozes for 7 days</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scheduler -->
+    <section>
+      <div class="section-label">Runtime</div>
+      <div class="section-title">Scheduling & Triggers</div>
+      <div class="section-desc">Two trigger modes keep the queue fresh without over-spending on LLM calls.</div>
+
+      <div class="completeness-wrap">
+        <div class="system-list" style="border-left: 3px solid var(--sage);">
+          <h4>Weekly Batch (Primary)</h4>
+          <div class="system-item" style="flex-direction: column; align-items: flex-start; gap: 0.25rem;">
+            <div style="font-size: 0.85rem; font-weight: 600;">Runs once per week per home</div>
+            <div style="font-size: 0.8rem; color: var(--text-light);">Evaluator &rarr; Generator &rarr; 5-7 insights queued</div>
+            <div style="font-size: 0.8rem; color: var(--text-light);">Clears expired insights from previous batch</div>
+            <div style="font-size: 0.8rem; color: var(--text-light);">Startup catch-up for missed windows</div>
+            <div style="font-size: 0.8rem; color: var(--text-light);">Runs as <code>setInterval</code> in the Express process</div>
+          </div>
+        </div>
+        <div class="system-list" style="border-left: 3px solid var(--accent-gold);">
+          <h4>Event-Triggered (Supplemental)</h4>
+          <div class="system-item" style="flex-direction: column; align-items: flex-start; gap: 0.25rem;">
+            <div style="font-size: 0.85rem; font-weight: 600;">Significant data changes set dirty flag</div>
+            <div style="font-size: 0.8rem; color: var(--text-light);">Service logged, equipment added, questions answered</div>
+            <div style="font-size: 0.8rem; color: var(--text-light);">Next batch picks up dirty homes first</div>
+            <div style="font-size: 0.8rem; color: var(--text-light);">1-hour debounce: multiple changes = one flag</div>
+            <div style="font-size: 0.8rem; color: var(--text-light);">Exception: urgent safety items bypass batch</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>WellKept Insight Engine &mdash; Design Spec v1 &middot; April 2026</p>
+  </div>
+
+</body>
+</html>
